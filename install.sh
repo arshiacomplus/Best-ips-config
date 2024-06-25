@@ -1,50 +1,40 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# Function to print text in red
-print_in_red() {
-    echo -e "\033[91m$1\033[0m"
-}
+# Clear the terminal
+clear
 
-# Function to download ip_scanner_config.py
-download_ip_scanner_config() {
-    if ! command -v curl &> /dev/null
-    then
-        print_in_red "[*] curl is not installed. Installing it now..."
-        pkg install curl -y
-    fi
+# Update package list
+echo "Updating package list..."
+pkg update -y
 
-    print_in_red "[*] Downloading ip_scanner_config.py..."
-    curl -O https://raw.githubusercontent.com/arshiacomplus/Best-ips-config/main/ip_scanner_config.py
-}
-
-# Function to install or update a package
-install_or_update_package() {
+# Function to check if a package is installed and up-to-date
+check_and_install() {
     local package=$1
-    
-    if ! dpkg -s $package &> /dev/null
-    then
-        print_in_red "[*] $package is not installed. Installing it now..."
-        pkg install $package -y
+    if pkg list-installed | grep -q "^$package/"; then
+        echo "$package is already installed. Checking for updates..."
+        pkg upgrade -y $package
     else
-        print_in_red "[*] $package is already installed. Checking for updates..."
-        pkg upgrade $package -y
+        echo "Installing $package..."
+        pkg install -y $package
     fi
 }
 
-# Clear the terminal before starting
+# Install or update required packages
+echo "Checking and installing required packages..."
+check_and_install jq
+check_and_install inetutils
+
+# Check if packages were installed successfully
+if ! command -v jq &> /dev/null || ! command -v ping &> /dev/null; then
+    echo "One or more required packages failed to install. Please check your package manager settings."
+    exit 1
+fi
+
+echo "All required packages are installed and up-to-date."
+
+# Clear the terminal before executing the next script
 clear
 
-# Check if ping is installed and update if necessary
-install_or_update_package iputils-ping
-
-# Check if python is installed and update if necessary
-install_or_update_package python
-
-# Download ip_scanner_config.py
-download_ip_scanner_config
-
-# Clear the terminal after all installations and updates
-clear
-
-# Execute the ip_scanner_config.py script
-python ip_scanner_config.py
+# Execute the script from the provided URL
+echo "Executing script from URL..."
+curl -s https://github.com/arshiacomplus/Best-ips-config/raw/main/ip_config_best.sh | bash
