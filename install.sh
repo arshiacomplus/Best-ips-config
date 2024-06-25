@@ -17,12 +17,24 @@ download_ip_scanner_config() {
     curl -O https://raw.githubusercontent.com/arshiacomplus/Best-ips-config/main/ip_scanner_config.py
 }
 
-# Check if ping is installed
-if ! command -v ping &> /dev/null
-then
-    print_in_red "ping is not installed. Installing it now..."
-    pkg install iputils -y
-fi
+# Function to install or update a package
+install_or_update_package() {
+    local package=$1
+    if ! command -v $package &> /dev/null
+    then
+        print_in_red "$package is not installed. Installing it now..."
+        pkg install $package -y
+    else
+        print_in_red "$package is already installed. Updating it now..."
+        pkg update $package -y
+    fi
+}
+
+# Check if ping is installed and update if necessary
+install_or_update_package iputils
+
+# Check if python is installed and update if necessary
+install_or_update_package python
 
 # Download ip_scanner_config.py
 download_ip_scanner_config
