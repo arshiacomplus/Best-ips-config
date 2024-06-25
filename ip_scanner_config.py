@@ -2,6 +2,15 @@ import re
 import os
 import subprocess
 
+def print_in_red(text):
+    """
+    Prints the given text in red color.
+    
+    Parameters:
+    text (str): The text to print in red.
+    """
+    print(f"\033[91m{text}\033[0m")
+
 def check_and_install_dependencies():
     """
     Checks if required dependencies (ping) are installed and prompts the user to install them if they are missing.
@@ -10,7 +19,7 @@ def check_and_install_dependencies():
         # Check if ping is installed
         subprocess.run(["ping", "-c", "1", "127.0.0.1"], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     except (subprocess.CalledProcessError, FileNotFoundError):
-        print("ping is not installed. Installing it now...")
+        print_in_red("ping is not installed. Installing it now...")
         os.system("pkg install iputils -y")
 
 def extract_ip(config_url):
@@ -62,7 +71,7 @@ def validate_config_url(config_url):
     """
     return config_url.startswith("vless://")
 
-if name == "main":
+if __name__ == "__main__":
     check_and_install_dependencies()
     
     # Loop to ensure valid input from user
@@ -70,7 +79,7 @@ if name == "main":
         config_url = input("Please enter the config_url: ")
         
         if not validate_config_url(config_url):
-            print("Error: config_url must start with 'vless://'.")
+            print_in_red("Error: config_url must start with 'vless://'.")
         else:
             ip = extract_ip(config_url)
             if ip:
@@ -78,4 +87,4 @@ if name == "main":
                 ping_ip(ip)
                 break  # Exit the loop if everything is successful
             else:
-                print("Failed to extract IP from config URL. Please try again.")
+                print_in_red("Failed to extract IP from config URL. Please try again.")
