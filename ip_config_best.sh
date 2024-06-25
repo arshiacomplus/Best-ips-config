@@ -3,6 +3,16 @@
 # Clear the terminal
 clear
 
+# Log file
+LOG_FILE="ip_config_best.log"
+
+# Function to log messages
+log_message() {
+    local message=$1
+    echo "$(date '+%Y-%m-%d %H:%M:%S') : $message" | tee -a "$LOG_FILE"
+}
+
+# Function to create an IP range
 create_ip_range() {
   local start_ip=$1
   local end_ip=$2
@@ -26,6 +36,7 @@ create_ip_range() {
   echo "${ip_range[@]}"
 }
 
+# Function to scan an IP and port
 scan_ip_port() {
   local ip=$1
   local port=$2
@@ -40,16 +51,17 @@ scan_ip_port() {
     ping_time=$(echo "$ping_output" | awk -F'time=' '/time=/ {print $2}' | awk '{print $1}')
     echo "$ip,$port,$ping_time" >> "$results_file"
   else
-    echo "IP: $ip Port: $port is not responding or closed."
+    log_message "IP: $ip Port: $port is not responding or closed."
     echo "$ip" >> "$packet_loss_file"
   fi
 
   if echo "$ping_output" | grep -q "error"; then
-    echo "Error pinging $ip:$port - $ping_output"
+    log_message "Error pinging $ip:$port - $ping_output"
     echo "$ip" >> "$packet_loss_file"
   fi
 }
 
+# Function to validate VLESS configuration
 validate_vless_config() {
   local config_file=$1
   if ! jq . "$config_file" > /dev/null 2>&1; then
@@ -69,6 +81,7 @@ validate_vless_config() {
   echo "Valid VLESS configuration"
 }
 
+# Main function
 main() {
   local config_file=$1
   if [[ -z "$config_file" ]]; then
@@ -79,6 +92,7 @@ main() {
   validate_vless_config "$config_file"
 
   echo "Please wait, scanning IP ..."
+  log_message "Started scanning IPs."
 
   local start_ips=("188.114.96.0" "162.159.192.0" "162.159.195.0")
   local end_ips=("188.114.99.224" "162.159.193.224" "162.159.195.224")
@@ -132,21 +146,23 @@ main() {
     echo -e "$ip\t$port\t${ping:-None}\t$loss_rate%\t$combined_score"
   done
 
-  best_result=${sorted_results[0]}
+best_result=${sorted_results[0]}
   IFS=, read -r ip port ping loss_rate combined_score <<< "$best_result"
 
-if [[ "$ip" != "No IP" ]]; then
+  if [[ "$ip" != "No IP" ]]; then
     echo "The best IP: $ip:$port, ping: ${ping:-None} ms, packet loss: $loss_rate%, score: $combined_score"
     jq --arg address "$ip" --argjson port "$port" '.vnext[0].address = $address | .vnext[0].port = $port' "$config_file" > "new_$config_file"
     echo "Updated VLESS configuration saved to new_$config_file"
     echo "Updated VLESS Configuration:"
     cat "new_$config_file"
+    log_message "Updated VLESS configuration saved to new_$config_file."
   else
     echo "Nothing was found"
+    log_message "No suitable IP found."
   fi
 
   # Clear the terminal at the end of the script
   clear
 }
 
-main "$@"
+main "$@
