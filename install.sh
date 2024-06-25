@@ -9,11 +9,11 @@ print_in_red() {
 download_ip_scanner_config() {
     if ! command -v curl &> /dev/null
     then
-        print_in_red "curl is not installed. Installing it now..."
+        print_in_red "[*] curl is not installed. Installing it now..."
         pkg install curl -y
     fi
 
-    print_in_red "Downloading ip_scanner_config.py..."
+    print_in_red "[*] Downloading ip_scanner_config.py..."
     curl -O https://raw.githubusercontent.com/arshiacomplus/Best-ips-config/main/ip_scanner_config.py
 }
 
@@ -22,10 +22,10 @@ install_or_update_package() {
     local package=$1
     if ! command -v $package &> /dev/null
     then
-        print_in_red "$package is not installed. Installing it now..."
+        print_in_red "[*] $package is not installed. Installing it now..."
         pkg install $package -y
     else
-        print_in_red "$package is already installed. Updating it now..."
+        print_in_red "[*] $package is already installed. Updating it now..."
         pkg update $package -y
     fi
 }
