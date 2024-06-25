@@ -36,16 +36,34 @@ def validate_config_url(config_url):
     """
     return config_url.startswith("vless://")
 
-if __name__ == "__main__":
+def main_menu():
+    """
+    Displays the main menu and handles user input.
+    """
     while True:
-        config_url = input("Please enter the config_url: ")
-        if not validate_config_url(config_url):
-            print_in_red("Error: config_url must start with 'vless://'.")
+        print("Choose an action:")
+        print("1. Ping an IP")
+        print("2. Exit")
+        choice = input("Enter your choice (1 or 2): ")
+        
+        if choice == '1':
+            while True:
+                config_url = input("Please enter the config_url: ")
+                if not validate_config_url(config_url):
+                    print_in_red("Error: config_url must start with 'vless://'.")
+                else:
+                    ip = extract_ip(config_url)
+                    if ip:
+                        print(f"[+] Extracted IP: {ip}")
+                        ping_ip(ip)
+                        break
+                    else:
+                        print_in_red("Failed to extract IP from config URL. Please try again.")
+        elif choice == '2':
+            print("Exiting...")
+            break
         else:
-            ip = extract_ip(config_url)
-            if ip:
-                print(f"[+] Extracted IP: {ip}")
-                ping_ip(ip)
-                break
-            else:
-                print_in_red("Failed to extract IP from config URL. Please try again.")
+            print_in_red("Invalid choice. Please enter 1 or 2.")
+
+if __name__ == "__main__":
+    main_menu()
